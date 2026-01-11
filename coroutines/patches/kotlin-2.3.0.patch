@@ -1,0 +1,200 @@
+diff --git a/buildSrc/src/main/kotlin/CacheRedirector.kt b/buildSrc/src/main/kotlin/CacheRedirector.kt
+index 85e6eef..a49e213 100644
+--- a/buildSrc/src/main/kotlin/CacheRedirector.kt
++++ b/buildSrc/src/main/kotlin/CacheRedirector.kt
+@@ -101,17 +101,8 @@ private fun Project.checkRedirect(repositories: RepositoryHandler, containerName
+ }
+ 
+ private fun Project.configureYarnAndNodeRedirects() {
+-    if (CacheRedirector.isEnabled) {
+-        val yarnRootExtension = extensions.findByType<YarnRootExtension>()
+-        yarnRootExtension?.downloadBaseUrl?.let {
+-            yarnRootExtension.downloadBaseUrl = CacheRedirector.maybeRedirect(it)
+-        }
+-
+-        val nodeJsExtension = rootProject.extensions.findByType<NodeJsRootExtension>()
+-        nodeJsExtension?.downloadBaseUrl?.let {
+-            nodeJsExtension.downloadBaseUrl = CacheRedirector.maybeRedirect(it)
+-        }
+-    }
++    // Disabled: downloadBaseUrl API removed in Kotlin 2.3.0
++    // This was only used for JetBrains internal CI cache redirection
+ }
+ 
+ // Used from Groovy scripts
+diff --git a/buildSrc/src/main/kotlin/animalsniffer-jvm-conventions.gradle.kts b/buildSrc/src/main/kotlin/animalsniffer-jvm-conventions.gradle.kts
+index 5ebd5c7..7ff73b5 100644
+--- a/buildSrc/src/main/kotlin/animalsniffer-jvm-conventions.gradle.kts
++++ b/buildSrc/src/main/kotlin/animalsniffer-jvm-conventions.gradle.kts
+@@ -1,11 +1,12 @@
+-plugins {
+-    id("ru.vyarus.animalsniffer")
+-}
+-
+-project.plugins.withType(JavaPlugin::class.java) {
+-    val signature: Configuration by configurations
+-    dependencies {
+-        signature("net.sf.androidscents.signature:android-api-level-14:4.0_r4@signature")
+-        signature("org.codehaus.mojo.signature:java17:1.0@signature")
+-    }
+-}
++// Disabled for Kotlin 2.3.0 native build - animalsniffer not needed
++// plugins {
++//     id("ru.vyarus.animalsniffer")
++// }
++//
++// project.plugins.withType(JavaPlugin::class.java) {
++//     val signature: Configuration by configurations
++//     dependencies {
++//         signature("net.sf.androidscents.signature:android-api-level-14:4.0_r4@signature")
++//         signature("org.codehaus.mojo.signature:java17:1.0@signature")
++//     }
++// }
+diff --git a/buildSrc/src/main/kotlin/animalsniffer-multiplatform-conventions.gradle.kts b/buildSrc/src/main/kotlin/animalsniffer-multiplatform-conventions.gradle.kts
+index 08b11d0..855226c 100644
+--- a/buildSrc/src/main/kotlin/animalsniffer-multiplatform-conventions.gradle.kts
++++ b/buildSrc/src/main/kotlin/animalsniffer-multiplatform-conventions.gradle.kts
+@@ -1,11 +1,12 @@
+-plugins {
+-    id("ru.vyarus.animalsniffer")
+-}
+-
+-project.plugins.withType(KotlinMultiplatformConventionsPlugin::class.java) {
+-    val signature: Configuration by configurations
+-    dependencies {
+-        signature("net.sf.androidscents.signature:android-api-level-14:4.0_r4@signature")
+-        signature("org.codehaus.mojo.signature:java17:1.0@signature")
+-    }
+-}
++// Disabled for Kotlin 2.3.0 native build - animalsniffer not needed
++// plugins {
++//     id("ru.vyarus.animalsniffer")
++// }
++//
++// project.plugins.withType(KotlinMultiplatformConventionsPlugin::class.java) {
++//     val signature: Configuration by configurations
++//     dependencies {
++//         signature("net.sf.androidscents.signature:android-api-level-14:4.0_r4@signature")
++//         signature("org.codehaus.mojo.signature:java17:1.0@signature")
++//     }
++// }
+diff --git a/buildSrc/src/main/kotlin/kotlin-multiplatform-conventions.gradle.kts b/buildSrc/src/main/kotlin/kotlin-multiplatform-conventions.gradle.kts
+index f1845cc..491a9ee 100644
+--- a/buildSrc/src/main/kotlin/kotlin-multiplatform-conventions.gradle.kts
++++ b/buildSrc/src/main/kotlin/kotlin-multiplatform-conventions.gradle.kts
+@@ -50,7 +50,9 @@ kotlin {
+         watchosDeviceArm64()
+     }
+     js {
+-        moduleName = project.name
++        compilerOptions {
++            moduleName.set(project.name)
++        }
+         nodejs()
+         compilations["main"]?.dependencies {
+             api("org.jetbrains.kotlinx:atomicfu-js:${version("atomicfu")}")
+@@ -60,7 +62,9 @@ kotlin {
+     wasmJs {
+         // Module name should be different from the one from JS
+         // otherwise IC tasks that start clashing different modules with the same module name
+-        moduleName = project.name + "Wasm"
++        compilerOptions {
++            moduleName.set(project.name + "Wasm")
++        }
+         nodejs()
+         compilations["main"]?.dependencies {
+             api("org.jetbrains.kotlinx:atomicfu-wasm-js:${version("atomicfu")}")
+diff --git a/gradle.properties b/gradle.properties
+index 7af5770..05984da 100644
+--- a/gradle.properties
++++ b/gradle.properties
+@@ -1,7 +1,7 @@
+ # Kotlin
+ version=1.10.2-SNAPSHOT
+ group=org.jetbrains.kotlinx
+-kotlin_version=2.1.0
++kotlin_version=2.3.0
+ # DO NOT rename this property without adapting kotlinx.train build chain:
+ atomicfu_version=0.26.1
+ benchmarks_version=0.4.13
+diff --git a/kotlinx-coroutines-core/build.gradle.kts b/kotlinx-coroutines-core/build.gradle.kts
+index 8ddea4f..9ba71c4 100644
+--- a/kotlinx-coroutines-core/build.gradle.kts
++++ b/kotlinx-coroutines-core/build.gradle.kts
+@@ -303,6 +303,7 @@ tasks.withType<AnimalSniffer> {
+     exclude("**/time/TimeKt*")
+ }
+ 
+-animalsniffer {
+-    defaultTargets = setOf("jvmMain")
+-}
++// Disabled for Kotlin 2.3.0 native build
++// animalsniffer {
++//     defaultTargets = setOf("jvmMain")
++// }
+diff --git a/kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt b/kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt
+index f94a9e9..447367e 100644
+--- a/kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt
++++ b/kotlinx-coroutines-core/common/src/channels/BufferedChannel.kt
+@@ -764,6 +764,7 @@ internal open class BufferedChannel<E>(
+         index: Int,
+         r: Long
+     ) = suspendCancellableCoroutineReusable { cont ->
++        @Suppress("USELESS_CAST")
+         val waiter = ReceiveCatching(cont as CancellableContinuationImpl<ChannelResult<E>>)
+         receiveImplOnNoWaiter(
+             segment, index, r,
+diff --git a/kotlinx-coroutines-core/common/src/channels/Channel.kt b/kotlinx-coroutines-core/common/src/channels/Channel.kt
+index 3e3c0f5..4f05812 100644
+--- a/kotlinx-coroutines-core/common/src/channels/Channel.kt
++++ b/kotlinx-coroutines-core/common/src/channels/Channel.kt
+@@ -939,10 +939,12 @@ public value class ChannelResult<out T>
+      */
+     public fun exceptionOrNull(): Throwable? = (holder as? Closed)?.cause
+ 
++    @PublishedApi
+     internal open class Failed {
+         override fun toString(): String = "Failed"
+     }
+ 
++    @PublishedApi
+     internal class Closed(@JvmField val cause: Throwable?): Failed() {
+         override fun equals(other: Any?): Boolean = other is Closed && cause == other.cause
+         override fun hashCode(): Int = cause.hashCode()
+diff --git a/kotlinx-coroutines-core/common/src/flow/SharedFlow.kt b/kotlinx-coroutines-core/common/src/flow/SharedFlow.kt
+index 4f19641..9f37ae7 100644
+--- a/kotlinx-coroutines-core/common/src/flow/SharedFlow.kt
++++ b/kotlinx-coroutines-core/common/src/flow/SharedFlow.kt
+@@ -518,12 +518,14 @@ internal open class SharedFlowImpl<T>(
+         for (r in resumes) r?.resume(Unit)
+     }
+ 
+-    private fun cancelEmitter(emitter: Emitter) = synchronized(this) {
+-        if (emitter.index < head) return // already skipped past this index
+-        val buffer = buffer!!
+-        if (buffer.getBufferAt(emitter.index) !== emitter) return // already resumed
+-        buffer.setBufferAt(emitter.index, NO_VALUE)
+-        cleanupTailLocked()
++    private fun cancelEmitter(emitter: Emitter) {
++        synchronized(this) {
++            if (emitter.index < head) return // already skipped past this index
++            val buffer = buffer!!
++            if (buffer.getBufferAt(emitter.index) !== emitter) return // already resumed
++            buffer.setBufferAt(emitter.index, NO_VALUE)
++            cleanupTailLocked()
++        }
+     }
+ 
+     internal fun updateNewCollectorIndexLocked(): Long {
+diff --git a/kotlinx-coroutines-core/common/src/flow/operators/Transform.kt b/kotlinx-coroutines-core/common/src/flow/operators/Transform.kt
+index f3c9be1..385d0d3 100644
+--- a/kotlinx-coroutines-core/common/src/flow/operators/Transform.kt
++++ b/kotlinx-coroutines-core/common/src/flow/operators/Transform.kt
+@@ -126,6 +126,7 @@ public fun <T> Flow<T>.runningReduce(operation: suspend (accumulator: T, value:
+         } else {
+             operation(accumulator as T, value)
+         }
++        @Suppress("USELESS_CAST")
+         emit(accumulator as T)
+     }
+ }

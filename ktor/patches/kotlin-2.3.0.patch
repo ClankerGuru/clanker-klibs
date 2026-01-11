@@ -1,0 +1,84 @@
+diff --git a/build-logic/src/main/kotlin/ktorbuild/internal/TrackedKotlinHierarchy.kt b/build-logic/src/main/kotlin/ktorbuild/internal/TrackedKotlinHierarchy.kt
+index f78bd75..7635ddf 100644
+--- a/build-logic/src/main/kotlin/ktorbuild/internal/TrackedKotlinHierarchy.kt
++++ b/build-logic/src/main/kotlin/ktorbuild/internal/TrackedKotlinHierarchy.kt
+@@ -11,7 +11,8 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+ import org.jetbrains.kotlin.gradle.plugin.KotlinHierarchyBuilder
+ import org.jetbrains.kotlin.gradle.plugin.KotlinHierarchyTemplate
+ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
+-import org.jetbrains.kotlin.konan.target.REMOVED_TARGET_MESSAGE
++
++private const val REMOVED_TARGET_MESSAGE = "Target has been removed"
+ 
+ private typealias GroupedSourceSets = MutableMap<String, MutableSet<String>>
+ 
+@@ -122,7 +123,7 @@ private class KotlinHierarchyTrackerImpl(
+     override fun withWasmWasi() = addTarget("wasmWasi")
+ 
+     @Deprecated("Renamed to 'withAndroidTarget'", replaceWith = ReplaceWith("withAndroidTarget()"))
+-    override fun withAndroid() = withAndroidTarget()
++    fun withAndroid() = withAndroidTarget()
+     override fun withAndroidTarget() = addTarget("android")
+     override fun withAndroidNativeX64() = addTarget("androidNativeX64")
+     override fun withAndroidNativeX86() = addTarget("androidNativeX86")
+@@ -148,27 +149,27 @@ private class KotlinHierarchyTrackerImpl(
+     override fun withMingwX64() = addTarget("mingwX64")
+     //endregion
+ 
+-    //region Removed targets
++    //region Removed targets (these methods no longer exist in the interface in Kotlin 2.3.0)
+     @Deprecated(REMOVED_TARGET_MESSAGE, level = DeprecationLevel.ERROR)
+-    override fun withIosArm32() = error("Target removed")
++    fun withIosArm32(): Unit = error("Target removed")
+ 
+     @Deprecated(REMOVED_TARGET_MESSAGE, level = DeprecationLevel.ERROR)
+-    override fun withWatchosX86() = error("Target removed")
++    fun withWatchosX86(): Unit = error("Target removed")
+ 
+     @Deprecated(REMOVED_TARGET_MESSAGE, level = DeprecationLevel.ERROR)
+-    override fun withMingwX86() = error("Target removed")
++    fun withMingwX86(): Unit = error("Target removed")
+ 
+     @Deprecated(REMOVED_TARGET_MESSAGE, level = DeprecationLevel.ERROR)
+-    override fun withLinuxArm32Hfp() = error("Target removed")
++    fun withLinuxArm32Hfp(): Unit = error("Target removed")
+ 
+     @Deprecated(REMOVED_TARGET_MESSAGE, level = DeprecationLevel.ERROR)
+-    override fun withLinuxMips32() = error("Target removed")
++    fun withLinuxMips32(): Unit = error("Target removed")
+ 
+     @Deprecated(REMOVED_TARGET_MESSAGE, level = DeprecationLevel.ERROR)
+-    override fun withLinuxMipsel32() = error("Target removed")
++    fun withLinuxMipsel32(): Unit = error("Target removed")
+ 
+     @Deprecated(REMOVED_TARGET_MESSAGE, level = DeprecationLevel.ERROR)
+-    override fun withWasm32() = error("Target removed")
++    fun withWasm32(): Unit = error("Target removed")
+     //endregion
+ 
+     private fun addTarget(name: String) {
+diff --git a/gradle/libs.versions.toml b/gradle/libs.versions.toml
+index 12aeb1b..fe95e02 100644
+--- a/gradle/libs.versions.toml
++++ b/gradle/libs.versions.toml
+@@ -1,6 +1,6 @@
+ [versions]
+ 
+-kotlin = "2.1.10"
++kotlin = "2.3.0"
+ kotlinx-html = "0.12.0"
+ kotlinx-datetime = "0.6.2"
+ kotlinx-io = "0.6.0"
+diff --git a/ktor-server/ktor-server-core/common/src/io/ktor/server/application/ApplicationPlugin.kt b/ktor-server/ktor-server-core/common/src/io/ktor/server/application/ApplicationPlugin.kt
+index f6323a2..006cff9 100644
+--- a/ktor-server/ktor-server-core/common/src/io/ktor/server/application/ApplicationPlugin.kt
++++ b/ktor-server/ktor-server-core/common/src/io/ktor/server/application/ApplicationPlugin.kt
+@@ -179,7 +179,7 @@ private fun <B : Any, F : Any> RoutingNode.installIntoRoute(
+     return installed
+ }
+ 
+-private fun <B : Any, F : Any, TSubject, TContext, P : Pipeline<TSubject, TContext>> P.addAllInterceptors(
++private fun <B : Any, F : Any, TSubject : Any, TContext : Any, P : Pipeline<TSubject, TContext>> P.addAllInterceptors(
+     fakePipeline: P,
+     plugin: BaseRouteScopedPlugin<B, F>,
+     pluginInstance: F

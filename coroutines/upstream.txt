@@ -1,0 +1,2 @@
+https://github.com/Kotlin/kotlinx.coroutines
+tag: 1.10.1

@@ -1,0 +1,117 @@
+diff --git a/gradle/wrapper/gradle-wrapper.properties b/gradle/wrapper/gradle-wrapper.properties
+--- a/gradle/wrapper/gradle-wrapper.properties
++++ b/gradle/wrapper/gradle-wrapper.properties
+@@ -1,7 +1,6 @@
+ distributionBase=GRADLE_USER_HOME
+ distributionPath=wrapper/dists
+-distributionSha256Sum=ff7bf6a86f09b9b2c40bb8f48b25fc19cf2b2664fd1d220cd7ab833ec758d0d7
+-distributionUrl=https\://services.gradle.org/distributions/gradle-8.0.2-bin.zip
++distributionUrl=https\://services.gradle.org/distributions/gradle-8.12.1-bin.zip
+ networkTimeout=10000
+ zipStoreBase=GRADLE_USER_HOME
+ zipStorePath=wrapper/dists
+diff --git a/build.gradle.kts b/build.gradle.kts
+index 8b831e5..fb47b52 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -27,7 +27,7 @@ allprojects {
+     }
+     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+         // outputs the compiler version to logs so we can check whether the train configuration applied
+-        kotlinOptions.freeCompilerArgs += "-version"
++        compilerOptions { freeCompilerArgs.add("-version") }
+     }
+     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
+         compilerOptions { freeCompilerArgs.add("-Xjvm-default=disable") }
+diff --git a/core/build.gradle.kts b/core/build.gradle.kts
+index e09eeb9..86bae68 100644
+--- a/core/build.gradle.kts
++++ b/core/build.gradle.kts
+@@ -101,11 +101,9 @@ kotlin {
+                 }
+             }
+         }
+-        compilations.all {
+-            kotlinOptions {
+-                sourceMap = true
+-                moduleKind = "umd"
+-            }
++        compilerOptions {
++            sourceMap.set(true)
++            moduleKind.set(org.jetbrains.kotlin.gradle.dsl.JsModuleKind.MODULE_UMD)
+         }
+ //        compilations["main"].apply {
+ //            kotlinOptions {
+@@ -422,10 +420,11 @@ tasks.configureEach {
+ // Drop this configuration when the Node.JS version in KGP will support wasm gc milestone 4
+ // check it here:
+ // https://github.com/JetBrains/kotlin/blob/master/libraries/tools/kotlin-gradle-plugin/src/common/kotlin/org/jetbrains/kotlin/gradle/targets/js/nodejs/NodeJsRootExtension.kt
+-with(org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin.apply(rootProject)) {
+-    nodeVersion = "21.0.0-v8-canary202309167e82ab1fa2"
+-    nodeDownloadBaseUrl = "https://nodejs.org/download/v8-canary"
+-}
++// Disabled for Kotlin 2.3.0 compatibility - nodeVersion/nodeDownloadBaseUrl moved to NodeJsPlugin
++// with(org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin.apply(rootProject)) {
++//     nodeVersion = "21.0.0-v8-canary202309167e82ab1fa2"
++//     nodeDownloadBaseUrl = "https://nodejs.org/download/v8-canary"
++// }
+ 
+ apiValidation {
+     @OptIn(kotlinx.validation.ExperimentalBCVApi::class)
+diff --git a/gradle.properties b/gradle.properties
+index 5b7ff59..2b58789 100644
+--- a/gradle.properties
++++ b/gradle.properties
+@@ -7,7 +7,7 @@ versionSuffix=SNAPSHOT
+ 
+ tzdbVersion=2025b
+ 
+-defaultKotlinVersion=2.1.20
++defaultKotlinVersion=2.3.0
+ dokkaVersion=2.0.0
+ serializationVersion=1.6.2
+ benchmarksVersion=0.7.2
+diff --git a/integration-testing/js-without-timezones/build.gradle.kts b/integration-testing/js-without-timezones/build.gradle.kts
+index 3593447..794313f 100644
+--- a/integration-testing/js-without-timezones/build.gradle.kts
++++ b/integration-testing/js-without-timezones/build.gradle.kts
+@@ -1,6 +1,6 @@
+ @file:OptIn(ExperimentalWasmDsl::class)
+ 
+-import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
++import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+ import java.util.Locale
+ 
+ plugins {
+diff --git a/integration-testing/serialization/build.gradle.kts b/integration-testing/serialization/build.gradle.kts
+index 5620a95..12b5515 100644
+--- a/integration-testing/serialization/build.gradle.kts
++++ b/integration-testing/serialization/build.gradle.kts
+@@ -50,11 +50,9 @@ kotlin {
+     js {
+         nodejs {
+         }
+-        compilations.all {
+-            kotlinOptions {
+-                sourceMap = true
+-                moduleKind = "umd"
+-            }
++        compilerOptions {
++            sourceMap.set(true)
++            moduleKind.set(org.jetbrains.kotlin.gradle.dsl.JsModuleKind.MODULE_UMD)
+         }
+     }
+ 
+diff --git a/timezones/full/build.gradle.kts b/timezones/full/build.gradle.kts
+index 2113438..a22e986 100644
+--- a/timezones/full/build.gradle.kts
++++ b/timezones/full/build.gradle.kts
+@@ -5,7 +5,7 @@
+ 
+ import com.github.gradle.node.npm.task.NpmTask
+ import com.github.gradle.node.npm.task.NpxTask
+-import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
++import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+ import org.jetbrains.kotlin.gradle.targets.js.npm.NpmResolverPlugin
+ import java.util.*
+ 

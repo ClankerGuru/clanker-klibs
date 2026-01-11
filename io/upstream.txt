@@ -1,0 +1,2 @@
+https://github.com/Kotlin/kotlinx-io
+tag: 0.8.2

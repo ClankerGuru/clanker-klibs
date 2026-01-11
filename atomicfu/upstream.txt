@@ -1,0 +1,6 @@
+https://github.com/Kotlin/kotlinx-atomicfu
+tag: 0.27.0
+# Patches needed:
+# - Fix ExperimentalWasmDsl import location
+# - Migrate moduleName to compilerOptions DSL
+# - Disable Develocity build cache (requires JetBrains server)

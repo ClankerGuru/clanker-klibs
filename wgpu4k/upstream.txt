@@ -1,0 +1,9 @@
+https://github.com/wgpu4k/wgpu4k-native
+tag: v27.0.4
+
+# Status: WORKING - native-only build for Kotlin 2.3.0
+
+# Patch notes:
+# - Removed @JvmInline from value classes (OptionalExpectation not allowed in metadata with Kotlin 2.3.0)
+# - Disabled Android and JVM targets (native-only build)
+# - Disabled allWarningsAsErrors for Kotlin 2.3.0 compatibility

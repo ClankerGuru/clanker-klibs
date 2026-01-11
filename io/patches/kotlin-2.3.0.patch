@@ -1,0 +1,42 @@
+diff --git a/core/apple/src/AppleCore.kt b/core/apple/src/AppleCore.kt
+index 7083d6e..2995723 100644
+--- a/core/apple/src/AppleCore.kt
++++ b/core/apple/src/AppleCore.kt
+@@ -44,6 +44,7 @@ private open class OutputStreamSink(
+                 val toCopy = minOf(remaining, limit - pos).toInt()
+                 bytesWritten = data.usePinned {
+                     val bytes = it.addressOf(pos).reinterpret<uint8_tVar>()
++                    @Suppress("REDUNDANT_CALL_OF_CONVERSION_METHOD")
+                     out.write(bytes, toCopy.convert()).toLong()
+                 }
+                 0
+@@ -95,6 +96,7 @@ private open class NSInputStreamSource(
+             val maxToCopy = minOf(byteCount, limit - pos)
+             val read = data.usePinned { ba ->
+                 val bytes = ba.addressOf(pos).reinterpret<uint8_tVar>()
++                @Suppress("REDUNDANT_CALL_OF_CONVERSION_METHOD")
+                 input.read(bytes, maxToCopy.convert()).toLong()
+             }
+             bytesRead = read
+diff --git a/core/nativeNonApple/src/files/FileSystemNativeNonApple.kt b/core/nativeNonApple/src/files/FileSystemNativeNonApple.kt
+--- a/core/nativeNonApple/src/files/FileSystemNativeNonApple.kt
++++ b/core/nativeNonApple/src/files/FileSystemNativeNonApple.kt
+@@ -14,6 +14,7 @@ public actual val SystemTemporaryDirectory: Path
+     get() = Path(getenv("TMPDIR")?.toKString() ?: getenv("TMP")?.toKString() ?: "")
+
+ @OptIn(ExperimentalForeignApi::class, UnsafeNumber::class)
++@Suppress("REDUNDANT_CALL_OF_CONVERSION_METHOD")
+ internal actual fun metadataOrNullImpl(path: Path): FileMetadata? {
+     memScoped {
+         val struct_stat = alloc<stat>()
+diff --git a/gradle/libs.versions.toml b/gradle/libs.versions.toml
+index 72367a1..7e786d5 100644
+--- a/gradle/libs.versions.toml
++++ b/gradle/libs.versions.toml
+@@ -1,5 +1,5 @@
+ [versions]
+-kotlin = "2.2.0"
++kotlin = "2.3.0"
+ java = "8"
+ multi-release-toolchain = "17"
+ dokka = "2.0.0"

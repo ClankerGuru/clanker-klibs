@@ -1,0 +1,70 @@
+diff --git a/atomicfu/build.gradle.kts b/atomicfu/build.gradle.kts
+index 5e18fa6..214c65e 100644
+--- a/atomicfu/build.gradle.kts
++++ b/atomicfu/build.gradle.kts
+@@ -1,7 +1,7 @@
+ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+-import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
++import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+ 
+@@ -14,7 +14,9 @@ kotlin {
+ 
+     // JS -- always
+     js(IR) {
+-        moduleName = "kotlinx-atomicfu"
++        compilerOptions {
++            moduleName.set("kotlinx-atomicfu")
++        }
+         // TODO: commented out because browser tests do not work on TeamCity
+         // browser()
+         nodejs()
+diff --git a/build-settings-logic/settings.gradle.kts b/build-settings-logic/settings.gradle.kts
+index 8ffc257..bdee7d0 100644
+--- a/build-settings-logic/settings.gradle.kts
++++ b/build-settings-logic/settings.gradle.kts
+@@ -111,7 +111,8 @@ buildCache {
+             directory = buildCacheLocalDirectory.get()
+         }
+     }
+-    remote(develocity.buildCache) {
+-        isPush = buildCachePushEnabled.get()
+-    }
++    // Disabled for local builds - requires JetBrains Develocity server
++    // remote(develocity.buildCache) {
++    //     isPush = buildCachePushEnabled.get()
++    // }
+ }
+\ No newline at end of file
+diff --git a/gradle/libs.versions.toml b/gradle/libs.versions.toml
+index d7688ab..eee4f3c 100644
+--- a/gradle/libs.versions.toml
++++ b/gradle/libs.versions.toml
+@@ -1,6 +1,6 @@
+ [versions]
+-kotlin = "2.1.0"
+-kotlin-for-gradle-plugin = "2.1.0" # Kotlin 2.1 removes support for the used language version / api version: KT-60521
++kotlin = "2.3.0"
++kotlin-for-gradle-plugin = "2.3.0" # Kotlin 2.1 removes support for the used language version / api version: KT-60521
+ kotlinx-binaryCompatibilityValidator = "0.16.0"
+ asm = "9.7"
+ slf4j = "1.8.0-alpha2"
+diff --git a/settings.gradle.kts b/settings.gradle.kts
+index fb24a9d..91786a4 100644
+--- a/settings.gradle.kts
++++ b/settings.gradle.kts
+@@ -7,8 +7,9 @@ pluginManagement {
+ plugins {
+     id("atomicfu-dependency-resolution-management")
+     id("org.gradle.toolchains.foojay-resolver-convention") version("0.8.0")
+-    id("atomicfu-develocity")
+-    id("atomicfu-cache-redirector")
++    // Disabled for local builds - requires JetBrains Develocity server
++    // id("atomicfu-develocity")
++    // id("atomicfu-cache-redirector")
+ }
+ 
+ include("atomicfu")

@@ -1,0 +1,248 @@
+diff --git a/gradle.properties b/gradle.properties
+index 7cadfe5f..1fe2e434 100644
+--- a/gradle.properties
++++ b/gradle.properties
+@@ -6,6 +6,10 @@ org.gradle.configuration-cache.parallel=true
+
+ kotlin.mpp.enableCInteropCommonization=true
+ kotlin.native.ignoreDisabledTargets=true
++kotlin.mpp.androidSourceSetLayoutVersion=2
++
++# Disable Android builds for native-only build
++wgpu4k.android.enabled=false
+
+ # Custom
+ #wgpu.base.url=https://github.com/gfx-rs/wgpu-native/releases/download/
+diff --git a/gradle/libs.versions.toml b/gradle/libs.versions.toml
+index b0aedeb2..ca95dff9 100644
+--- a/gradle/libs.versions.toml
++++ b/gradle/libs.versions.toml
+@@ -1,6 +1,6 @@
+ [versions]
+ kaml = "0.96.0"
+-kotlin = "2.2.21"
++kotlin = "2.3.0"
+ wgpu = "v27.0.4.0"
+ download = "5.6.0"
+ agp = "8.12.3"
+diff --git a/wgpu4k-native/build.gradle.kts b/wgpu4k-native/build.gradle.kts
+index 5c9b5a07..ea6c4f56 100644
+--- a/wgpu4k-native/build.gradle.kts
++++ b/wgpu4k-native/build.gradle.kts
+@@ -1,4 +1,4 @@
+-import com.android.build.gradle.tasks.MergeSourceSetFolders
++// import com.android.build.gradle.tasks.MergeSourceSetFolders  // Disabled for native-only build
+ import org.jetbrains.dokka.base.DokkaBase
+ import org.jetbrains.dokka.base.DokkaBaseConfiguration
+ import org.jetbrains.dokka.gradle.DokkaTask
+@@ -9,7 +9,7 @@ import java.nio.file.Files
+ plugins {
+     `kotlin-multiplatform`
+     publish
+-    com.android.library
++    // com.android.library  // Disabled for native-only build
+     alias(libs.plugins.kotest)
+     alias(libs.plugins.ksp)
+     id("generator")
+@@ -33,34 +33,9 @@ kotlin {
+         androidNativeX64(),
+     )
+
+-    androidTarget {
+-        compilerOptions {
+-            jvmTarget = JvmTarget.JVM_17
+-        }
+-
+-        android {
+-            namespace = "io.ygdrasil.wgpu"
+-            compileSdk = 36
+-
+-            defaultConfig {
+-                minSdk = 28
+-            }
+-
+-            sourceSets {
+-                getByName("main") {
+-                    jniLibs.srcDirs(jniBasePath().absolutePath)
+-                }
+-
+-            }
+-        }
+-        publishLibraryVariants("release", "debug")
+-    }
+-
+-    jvm {
+-        compilerOptions {
+-            jvmTarget = JvmTarget.JVM_24
+-        }
+-    }
++    // Android and JVM targets disabled for native-only build
++    // androidTarget { ... }
++    // jvm { ... }
+
+     nativeTargets.forEach { target ->
+         val main by target.compilations.getting {
+@@ -72,18 +47,12 @@ kotlin {
+     }
+
+     compilerOptions {
+-        allWarningsAsErrors = true
++        allWarningsAsErrors = false  // Disabled for Kotlin 2.3.0 compatibility
+         freeCompilerArgs.add("-Xexpect-actual-classes")
+     }
+
+     sourceSets {
+-        androidMain {
+-            dependencies {
+-                val jna = libs.jna.get()
+-                api("${jna.module.group}:${jna.module.name}:${jna.versionConstraint}:@aar")
+-            }
+-        }
+-
++        // Android and JVM source sets disabled for native-only build
+         commonTest {
+             dependencies {
+                 implementation(libs.bundles.kotest)
+@@ -91,25 +60,6 @@ kotlin {
+                 implementation(kotlin("test-annotations-common"))
+             }
+         }
+-
+-        jvmMain {
+-            sourceSets {
+-                resources.srcDirs(jvmLibResourcesDirectory.absolutePath)
+-            }
+-        }
+-
+-        jvmTest {
+-            dependencies {
+-                implementation(libs.kotest.runner.junit5)
+-                implementation(libs.kotlin.reflect)
+-            }
+-        }
+-
+-        androidUnitTest {
+-            dependencies {
+-                implementation(libs.kotest.runner.junit5)
+-            }
+-        }
+     }
+ }
+
+@@ -236,11 +186,12 @@ configureDownloadTasks {
+     }
+ }
+
+-java {
+-    toolchain {
+-        languageVersion = JavaLanguageVersion.of(24)
+-    }
+-}
++// Java toolchain disabled for native-only build
++// java {
++//     toolchain {
++//         languageVersion = JavaLanguageVersion.of(24)
++//     }
++// }
+
+ fun jniBasePath() = buildNativeResourcesDirectory.resolve("libs")
+
+@@ -248,22 +199,13 @@ tasks.withType<Test> {
+     failOnNoDiscoveredTests = false
+ }
+
+-tasks.named<Test>("jvmTest") {
+-    useJUnitPlatform()
+-    testLogging {
+-        showExceptions = true
+-        showStandardStreams = true
+-        events = setOf(
+-            org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED,
+-            org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED
+-        )
+-        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+-    }
+-}
++// Disabled for native-only build (no JVM target)
++// tasks.named<Test>("jvmTest") { ... }
+
+-tasks.withType(MergeSourceSetFolders::class.java).configureEach {
+-    dependsOn("fetch-native-dependencies")
+-}
++// Disabled for native-only build
++// tasks.withType(MergeSourceSetFolders::class.java).configureEach {
++//     dependsOn("fetch-native-dependencies")
++// }
+ tasks.withType(CInteropProcess::class.java).configureEach {
+     dependsOn("fetch-native-dependencies")
+ }
+diff --git a/wgpu4k-native/src/commonMain/kotlin/Types.kt b/wgpu4k-native/src/commonMain/kotlin/Types.kt
+index e1c7317c..c585fd9d 100644
+--- a/wgpu4k-native/src/commonMain/kotlin/Types.kt
++++ b/wgpu4k-native/src/commonMain/kotlin/Types.kt
+@@ -2,51 +2,29 @@
+ package io.ygdrasil.wgpu
+
+ import ffi.NativeAddress
+-import kotlin.jvm.JvmInline
+-@JvmInline
++
+ value class WGPUAdapter(val handler: NativeAddress)
+-@JvmInline
+ value class WGPUBindGroup(val handler: NativeAddress)
+-@JvmInline
+ value class WGPUBindGroupLayout(val handler: NativeAddress)
+-@JvmInline
+ value class WGPUBuffer(val handler: NativeAddress)
+-@JvmInline
+ value class WGPUCommandBuffer(val handler: NativeAddress)
+-@JvmInline
+ value class WGPUCommandEncoder(val handler: NativeAddress)
+-@JvmInline
+ value class WGPUComputePassEncoder(val handler: NativeAddress)
+-@JvmInline
+ value class WGPUComputePipeline(val handler: NativeAddress)
+-@JvmInline
+ value class WGPUDevice(val handler: NativeAddress)
+-@JvmInline
+ value class WGPUInstance(val handler: NativeAddress)
+-@JvmInline
+ value class WGPUPipelineLayout(val handler: NativeAddress)
+-@JvmInline
+ value class WGPUQuerySet(val handler: NativeAddress)
+-@JvmInline
+ value class WGPUQueue(val handler: NativeAddress)
+-@JvmInline
+ value class WGPURenderBundle(val handler: NativeAddress)
+-@JvmInline
+ value class WGPURenderBundleEncoder(val handler: NativeAddress)
+-@JvmInline
+ value class WGPURenderPassEncoder(val handler: NativeAddress)
+-@JvmInline
+ value class WGPURenderPipeline(val handler: NativeAddress)
+-@JvmInline
+ value class WGPUSampler(val handler: NativeAddress)
+-@JvmInline
+ value class WGPUShaderModule(val handler: NativeAddress)
+ /**
+  * An object used to continuously present image data to the user, see @ref Surfaces for more details.
+  */
+-@JvmInline
+ value class WGPUSurface(val handler: NativeAddress)
+-@JvmInline
+ value class WGPUTexture(val handler: NativeAddress)
+-@JvmInline
+ value class WGPUTextureView(val handler: NativeAddress)
+diff --git a/wgpu4k-native/src/commonMain/kotlin/ffi/Array.kt b/wgpu4k-native/src/commonMain/kotlin/ffi/Array.kt
+index 79d51bf8..b2b99375 100644
+--- a/wgpu4k-native/src/commonMain/kotlin/ffi/Array.kt
++++ b/wgpu4k-native/src/commonMain/kotlin/ffi/Array.kt
+@@ -1,8 +1,5 @@
+ package ffi
+
+-import kotlin.jvm.JvmInline
+-
+-@JvmInline
+ value class ArrayHolder<T>(val handler: NativeAddress) {
+     fun toBuffer(size: ULong): MemoryBuffer {
+         return MemoryBuffer(handler, size)

@@ -1,0 +1,3 @@
+https://github.com/Kotlin/kotlinx.serialization
+tag: v1.10.0-RC
+# No patches needed - already supports Kotlin 2.3.0
