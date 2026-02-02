@@ -28,11 +28,23 @@ jobs:
           DEPS_DIR: ${{ github.workspace }}/deps
           TARGET: linuxX64
       
-      - name: Find built klibs
-        run: find ~/.m2 -name "*linuxx64*.klib" 2>/dev/null | head -20
+      - name: Find and copy klibs
+        run: |
+          mkdir -p klibs
+          find $HOME/.m2 -name "*linuxx64*.klib" -exec cp {} klibs/ \;
+          ls -la klibs/
       
-      - name: Upload klibs
+      - name: Upload to latest release
+        run: |
+          for klib in klibs/*.klib; do
+            echo "Uploading $klib..."
+            gh release upload latest "$klib" --clobber || echo "Upload may need manual intervention"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Upload artifact (backup)
         uses: actions/upload-artifact@v4
         with:
           name: serialization-linuxx64
-          path: ~/.m2/repository/org/jetbrains/kotlinx/**/linuxx64/**/*.klib
+          path: klibs/*.klib
