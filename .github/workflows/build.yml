@@ -1,0 +1,38 @@
+name: Build KLibs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      
+      - name: Clone and patch serialization
+        run: ./build.sh clone serialization
+        env:
+          DEPS_DIR: ${{ github.workspace }}/deps
+      
+      - name: Build serialization for linuxX64
+        run: ./build.sh build serialization
+        env:
+          DEPS_DIR: ${{ github.workspace }}/deps
+          TARGET: linuxX64
+      
+      - name: Find built klibs
+        run: find ~/.m2 -name "*linuxx64*.klib" 2>/dev/null | head -20
+      
+      - name: Upload klibs
+        uses: actions/upload-artifact@v4
+        with:
+          name: serialization-linuxx64
+          path: ~/.m2/repository/org/jetbrains/kotlinx/**/linuxx64/**/*.klib

@@ -84,7 +84,7 @@ build_lib() {
             (cd "$dest" && ./gradlew :kotlinx-datetime:publish${cap_target}PublicationToMavenLocal)
             ;;
         serialization)
-            (cd "$dest" && ./gradlew :kotlinx-serialization-core:publish${cap_target}PublicationToMavenLocal)
+            (cd "$dest" && ./gradlew :kotlinx-serialization-core:publish${cap_target}PublicationToMavenLocal :kotlinx-serialization-json:publish${cap_target}PublicationToMavenLocal)
             ;;
         atomicfu)
             (cd "$dest" && ./gradlew :atomicfu:publish${cap_target}PublicationToMavenLocal)
